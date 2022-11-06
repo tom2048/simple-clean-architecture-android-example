@@ -5,10 +5,7 @@ import com.example.simplecleanarchitecture.core.lib.resources.AppResources
 import com.example.simplecleanarchitecture.core.model.User
 import com.example.simplecleanarchitecture.core.repository.AssetsRepository
 import com.example.simplecleanarchitecture.core.repository.UsersRepository
-import com.nhaarman.mockitokotlin2.mock
-import com.nhaarman.mockitokotlin2.never
-import com.nhaarman.mockitokotlin2.only
-import com.nhaarman.mockitokotlin2.verify
+import com.nhaarman.mockitokotlin2.*
 import io.reactivex.rxjava3.core.Completable
 import io.reactivex.rxjava3.core.Single
 import org.junit.After
@@ -58,7 +55,7 @@ class UserUpdateUseCaseDefaultTest {
 
         testObserver.assertComplete()
             .dispose()
-        verify(assetsRepository, only()).saveImage(anyNotNull(), anyNotNull())
+        verify(assetsRepository, only()).saveImage(eq(AssetsRepository.AVATAR_ID_PATTERN.format(DEFAULT_USER.id)), anyNotNull())
     }
 
     @Test
@@ -69,7 +66,32 @@ class UserUpdateUseCaseDefaultTest {
 
         testObserver.assertComplete()
             .dispose()
-        verify(assetsRepository, only()).saveImage(anyNotNull(), anyNotNull())
+        verify(assetsRepository, only()).saveImage(eq(AssetsRepository.AVATAR_ID_PATTERN.format(DEFAULT_USER.id)), anyNotNull())
+    }
+
+    //TODO: Ended here, add viewmodel state, then check application build and commit
+
+    @Test
+    fun `invoke() saves scan photo when avatar not null and new user added`() {
+        val newUser = DEFAULT_USER.copy(id = null, idScan = byteArrayOf())
+
+        val testObserver = userUpdateUseCase(newUser)
+            .test()
+
+        testObserver.assertComplete()
+            .dispose()
+        verify(assetsRepository, only()).saveImage(eq(AssetsRepository.ID_SCAN_ID_PATTERN.format(DEFAULT_USER.id)), anyNotNull())
+    }
+
+    @Test
+    fun `invoke() saves scan photo when avatar not null and existing user edited`() {
+        val existingUser = DEFAULT_USER.copy(idScan = byteArrayOf())
+
+        val testObserver = userUpdateUseCase(existingUser).test()
+
+        testObserver.assertComplete()
+            .dispose()
+        verify(assetsRepository, only()).saveImage(eq(AssetsRepository.ID_SCAN_ID_PATTERN.format(DEFAULT_USER.id)), anyNotNull())
     }
 
 

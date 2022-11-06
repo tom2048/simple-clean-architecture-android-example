@@ -1,14 +1,12 @@
 package com.example.simplecleanarchitecture
 
 import android.app.Application
+import androidx.lifecycle.SavedStateHandle
 import com.example.simplecleanarchitecture.core.lib.di.AppSchedulers
 import com.example.simplecleanarchitecture.core.lib.di.AppSchedulersDefault
 import com.example.simplecleanarchitecture.core.lib.resources.AppResources
 import com.example.simplecleanarchitecture.core.lib.resources.AppResourcesDefault
-import com.example.simplecleanarchitecture.core.repository.AssetsRepository
-import com.example.simplecleanarchitecture.core.repository.AssetsRepositoryMemory
-import com.example.simplecleanarchitecture.core.repository.UsersRepository
-import com.example.simplecleanarchitecture.core.repository.UsersRepositoryMemory
+import com.example.simplecleanarchitecture.core.repository.*
 import com.example.simplecleanarchitecture.users.ui.passwordchange.UserPasswordChangeViewModel
 import com.example.simplecleanarchitecture.users.ui.useredit.UserEditViewModel
 import com.example.simplecleanarchitecture.users.ui.userlist.UserListViewModel
@@ -40,19 +38,22 @@ class MainApplication : Application() {
 
     private fun viewModelModule() = module {
         viewModel { UserListViewModel(get(), get(), get(), get()) }
-        viewModel { UserEditViewModel(get(), get(), get(), get()) }
-        viewModel { UserPasswordChangeViewModel(get(), get(), get()) }
+        viewModel { (userId: String, state: SavedStateHandle) -> UserEditViewModel(userId, state, get(), get(), get(), get(), get(), get()) }
+        viewModel { (userId: String, state: SavedStateHandle) -> UserPasswordChangeViewModel(userId, state, get(), get(), get()) }
     }
 
     private fun repositoryModule() = module {
         single<UsersRepository> { UsersRepositoryMemory(get()) }
         single<AssetsRepository> { AssetsRepositoryMemory(get()) }
+        single<StorageRepository> { FileStorageRepository(get()) }
     }
 
     private fun useCaseModule() = module {
         single<UserShowListUseCase> { UserShowListUseCaseDefault(get()) }
         single<UserShowDetailsUseCase> { UserShowDetailsUseCaseDefault(get(), get()) }
         single<UserUpdateUseCase> { UserUpdateUseCaseDefault(get(), get(), get()) }
+        single<UserAddAttachmentUseCase> { UserAddAttachmentUseCaseDefault(get(), get()) }
+        single<UserGetAttachmentUseCase> { UserGetAttachmentUseCaseDefault(get()) }
         single<UserDeleteUseCase> { UserDeleteUseCaseDefault(get()) }
         single<UserPasswordUpdateUseCase> { UserPasswordUpdateUseCaseDefault(get()) }
     }

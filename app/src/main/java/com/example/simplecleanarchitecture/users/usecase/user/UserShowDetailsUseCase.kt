@@ -9,16 +9,21 @@ interface UserShowDetailsUseCase : (String) -> Single<User>
 
 class UserShowDetailsUseCaseDefault(private val usersRepository: UsersRepository, private val assetsRepository: AssetsRepository) : UserShowDetailsUseCase {
 
-    // No unit tests for simple getters
     override fun invoke(id: String): Single<User> = usersRepository
         .get(id)
         .firstOrError()
+        .map { user ->
+            User(user.id, user.nickname, user.email, user.description)
+        }
         .flatMap { user ->
-            assetsRepository.getImage(user.id!!).map { image ->
-                User(user.id, user.nickname, user.email, user.description, image)
-            }.onErrorReturn {
-                User(user.id, user.nickname, user.email, user.description, null)
-            }
+            assetsRepository.getImage(AssetsRepository.AVATAR_ID_PATTERN.format(user.id!!)).map { image ->
+                user.copy(photo = image)
+            }.onErrorReturn { user }
+        }
+        .flatMap { user ->
+            assetsRepository.getImage(AssetsRepository.ID_SCAN_ID_PATTERN.format(user.id!!)).map { image ->
+                user.copy(idScan = image)
+            }.onErrorReturn { user }
         }
 
 }

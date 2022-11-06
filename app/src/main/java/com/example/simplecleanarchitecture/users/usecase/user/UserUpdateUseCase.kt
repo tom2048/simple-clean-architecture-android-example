@@ -7,6 +7,7 @@ import com.example.simplecleanarchitecture.core.repository.AssetsRepository
 import com.example.simplecleanarchitecture.core.repository.UsersRepository
 import com.example.simplecleanarchitecture.core.repository.model.UserDetails
 import io.reactivex.rxjava3.core.Completable
+import io.reactivex.rxjava3.core.Single
 
 interface UserUpdateUseCase : (User) -> Completable
 
@@ -32,9 +33,23 @@ class UserUpdateUseCaseDefault(
             val userDetails = UserDetails(user.id, user.nickname, user.email, user.description)
             if (user.id.isNullOrEmpty()) {
                 usersRepository.insert(userDetails)
-                    .flatMapCompletable { id ->
+                    .flatMap { id ->
                         user.photo?.let {
-                            assetsRepository.saveImage(id, user.photo)
+                            assetsRepository.saveImage(
+                                AssetsRepository.AVATAR_ID_PATTERN.format(id),
+                                it
+                            )
+                                .andThen(Single.just(id))
+                        } ?: run {
+                            Single.just(id)
+                        }
+                    }
+                    .flatMapCompletable { id ->
+                        user.idScan?.let {
+                            assetsRepository.saveImage(
+                                AssetsRepository.ID_SCAN_ID_PATTERN.format(id),
+                                it
+                            )
                         } ?: run {
                             Completable.complete()
                         }
@@ -42,7 +57,18 @@ class UserUpdateUseCaseDefault(
             } else {
                 usersRepository.update(userDetails)
                     .andThen(user.photo?.let {
-                        assetsRepository.saveImage(user.id, user.photo)
+                        assetsRepository.saveImage(
+                            AssetsRepository.AVATAR_ID_PATTERN.format(user.id),
+                            it
+                        )
+                    } ?: run {
+                        Completable.complete()
+                    })
+                    .andThen(user.idScan?.let {
+                        assetsRepository.saveImage(
+                            AssetsRepository.ID_SCAN_ID_PATTERN.format(user.id),
+                            it
+                        )
                     } ?: run {
                         Completable.complete()
                     })

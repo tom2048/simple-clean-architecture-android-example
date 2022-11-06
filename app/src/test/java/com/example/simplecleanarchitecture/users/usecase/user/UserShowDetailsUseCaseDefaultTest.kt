@@ -6,10 +6,7 @@ import com.example.simplecleanarchitecture.core.model.User
 import com.example.simplecleanarchitecture.core.repository.AssetsRepository
 import com.example.simplecleanarchitecture.core.repository.UsersRepository
 import com.example.simplecleanarchitecture.core.repository.model.UserDetails
-import com.nhaarman.mockitokotlin2.mock
-import com.nhaarman.mockitokotlin2.never
-import com.nhaarman.mockitokotlin2.only
-import com.nhaarman.mockitokotlin2.verify
+import com.nhaarman.mockitokotlin2.*
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.Single
 import org.junit.After
@@ -26,9 +23,21 @@ class UserShowDetailsUseCaseDefaultTest {
 
     @Test
     fun `invoke() merges user details and assets when user exists`() {
-        val expected = User(DEFAULT_USER.id, DEFAULT_USER.nickname, DEFAULT_USER.email, DEFAULT_USER.description, byteArrayOf())
+        val expected = User(
+            DEFAULT_USER.id,
+            DEFAULT_USER.nickname,
+            DEFAULT_USER.email,
+            DEFAULT_USER.description,
+            byteArrayOf(),
+            byteArrayOf()
+        )
         `when`(usersRepository.get(anyNotNull())).thenReturn(Observable.just(DEFAULT_USER))
-        `when`(assetsRepository.getImage(anyNotNull())).thenReturn(Single.just(expected.photo))
+        `when`(assetsRepository.getImage(eq(AssetsRepository.AVATAR_ID_PATTERN.format(expected.id)))).thenReturn(
+            Single.just(expected.photo)
+        )
+        `when`(assetsRepository.getImage(eq(AssetsRepository.ID_SCAN_ID_PATTERN.format(expected.id)))).thenReturn(
+            Single.just(expected.idScan)
+        )
 
         val testObserver = userDetailsUseCase(DEFAULT_USER.id!!).test()
 
@@ -36,7 +45,20 @@ class UserShowDetailsUseCaseDefaultTest {
             .assertValue(expected)
             .dispose()
         verify(usersRepository, only()).get(anyNotNull())
-        verify(assetsRepository, only()).getImage(anyNotNull())
+        verify(assetsRepository, times(1)).getImage(
+            eq(
+                AssetsRepository.AVATAR_ID_PATTERN.format(
+                    expected.id
+                )
+            )
+        )
+        verify(assetsRepository, times(1)).getImage(
+            eq(
+                AssetsRepository.ID_SCAN_ID_PATTERN.format(
+                    expected.id
+                )
+            )
+        )
     }
 
     @Test
@@ -55,7 +77,13 @@ class UserShowDetailsUseCaseDefaultTest {
 
     @Test
     fun `invoke() doesn't result with error when user exists and photo doesn't`() {
-        val expected = User(DEFAULT_USER.id, DEFAULT_USER.nickname, DEFAULT_USER.email, DEFAULT_USER.description, null)
+        val expected = User(
+            DEFAULT_USER.id,
+            DEFAULT_USER.nickname,
+            DEFAULT_USER.email,
+            DEFAULT_USER.description,
+            null
+        )
         `when`(usersRepository.get(anyNotNull())).thenReturn(Observable.just(DEFAULT_USER))
         `when`(assetsRepository.getImage(anyNotNull())).thenReturn(Single.error(TestException()))
 
@@ -88,6 +116,11 @@ class UserShowDetailsUseCaseDefaultTest {
     }
 
     companion object {
-        private val DEFAULT_USER = UserDetails("a312b3ee-84c2-11eb-8dcd-0242ac130003", "Testnick", "test@test.com", "Test description")
+        private val DEFAULT_USER = UserDetails(
+            "a312b3ee-84c2-11eb-8dcd-0242ac130003",
+            "Testnick",
+            "test@test.com",
+            "Test description"
+        )
     }
 }

@@ -109,12 +109,57 @@
                 android:id="@+id/avatarImage"
                 android:layout_width="0dp"
                 android:layout_height="80dp"
-                android:layout_marginEnd="16dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="8dp"
                 android:src="@drawable/user_avatar_ico"
-                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/idScanImage"
+                app:layout_constraintHorizontal_bias="0.5"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/descriptionInput"
-                app:srcCompat="@drawable/ic_launcher_background" />
+                app:srcCompat="@drawable/user_avatar_ico" />
+
+            <TextView
+                android:id="@+id/avatarImageDescription"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="16dp"
+                android:layout_marginEnd="16dp"
+                android:text="@string/user_avatar_description"
+                android:textSize="20dp"
+                app:layout_constraintEnd_toEndOf="@id/avatarImage"
+                app:layout_constraintStart_toStartOf="@id/avatarImage"
+                app:layout_constraintTop_toBottomOf="@id/avatarImage"
+                />
+
+            <ImageView
+                android:id="@+id/idScanImage"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="16dp"
+                android:src="@drawable/user_avatar_ico"
+                app:layout_constraintBottom_toBottomOf="@+id/avatarImage"
+                app:layout_constraintTop_toTopOf="@+id/avatarImage"
+                app:layout_constraintStart_toEndOf="@+id/avatarImage"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:srcCompat="@drawable/user_id_scan_ico" />
+
+            <TextView
+                android:id="@+id/idScanImageDescription"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="16dp"
+                android:layout_marginEnd="16dp"
+                android:text="@string/user_idscan_description"
+                android:textSize="20dp"
+                app:layout_constraintEnd_toEndOf="@id/idScanImage"
+                app:layout_constraintStart_toStartOf="@id/idScanImage"
+                app:layout_constraintTop_toBottomOf="@id/idScanImage"
+                />
 
             <Button
                 android:id="@+id/submitButton"
@@ -130,7 +175,7 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.5"
                 app:layout_constraintStart_toEndOf="@+id/cancelButton"
-                app:layout_constraintTop_toBottomOf="@+id/avatarImage"
+                app:layout_constraintTop_toBottomOf="@+id/avatarImageDescription"
                 app:layout_constraintVertical_bias="1.0" />
 
             <Button
@@ -145,7 +190,7 @@
                 app:layout_constraintEnd_toStartOf="@+id/submitButton"
                 app:layout_constraintHorizontal_bias="0.5"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/avatarImage"
+                app:layout_constraintTop_toBottomOf="@+id/avatarImageDescription"
                 app:layout_constraintVertical_bias="1.0" />
 
             <ProgressBar

@@ -2,6 +2,7 @@ package com.example.simplecleanarchitecture.users.ui.passwordchange
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.lifecycle.Observer
+import androidx.lifecycle.SavedStateHandle
 import com.example.simplecleanarchitecture.R
 import com.example.simplecleanarchitecture.core.lib.DefaultTestHelper
 import com.example.simplecleanarchitecture.core.lib.TestException
@@ -152,8 +153,12 @@ class UserPasswordChangeViewModelTest : TestHelper by DefaultTestHelper() {
 
     @Test
     fun `submit() shows and then doesn't hide the preloader when password successfully changed`() {
-        viewModel.setParams(DEFAULT_USER_ID)
-        `when`(passwordUpdateUseCase.invoke(anyString(), anyString())).thenReturn(Completable.complete())
+        `when`(
+            passwordUpdateUseCase.invoke(
+                anyString(),
+                anyString()
+            )
+        ).thenReturn(Completable.complete())
 
         viewModel.preloader.observeForever({ value ->
             println("Value: $value")
@@ -169,8 +174,11 @@ class UserPasswordChangeViewModelTest : TestHelper by DefaultTestHelper() {
 
     @Test
     fun `submit() shows and then hides the preloader when there were errors during password change`() {
-        `when`(passwordUpdateUseCase.invoke(anyString(), anyString())).thenReturn(Completable.error(TestException()))
-        viewModel.setParams(DEFAULT_USER_ID)
+        `when`(passwordUpdateUseCase.invoke(anyString(), anyString())).thenReturn(
+            Completable.error(
+                TestException()
+            )
+        )
 
         viewModel.submit()
 
@@ -183,22 +191,27 @@ class UserPasswordChangeViewModelTest : TestHelper by DefaultTestHelper() {
 
     @Test
     fun `submit() executes password update when password is valid`() {
-        val userId = "testId"
-        viewModel.setParams(userId)
         viewModel.password.value = VALID_PASSWORD
-        `when`(passwordUpdateUseCase.invoke(userId, viewModel.password.value!!)).thenReturn(Completable.complete())
+        `when`(
+            passwordUpdateUseCase.invoke(
+                DEFAULT_USER_ID,
+                viewModel.password.value!!
+            )
+        ).thenReturn(Completable.complete())
 
         viewModel.submit()
 
-        verify(passwordUpdateUseCase, only()).invoke(userId, viewModel.password.value!!)
+        verify(passwordUpdateUseCase, only()).invoke(DEFAULT_USER_ID, viewModel.password.value!!)
     }
 
     @Test
     fun `submit() shows error message when there were some errors`() {
-        val userId = DEFAULT_USER_ID
-        viewModel.setParams(userId)
         viewModel.password.value = INVALID_PASSWORD
-        `when`(passwordUpdateUseCase.invoke(anyString(), anyString())).thenReturn(Completable.error(TestException()))
+        `when`(passwordUpdateUseCase.invoke(anyString(), anyString())).thenReturn(
+            Completable.error(
+                TestException()
+            )
+        )
 
         viewModel.submit()
 
@@ -207,9 +220,13 @@ class UserPasswordChangeViewModelTest : TestHelper by DefaultTestHelper() {
 
     @Test
     fun `submit() closes the screen when there were no errors`() {
-        viewModel.setParams(DEFAULT_USER_ID)
         viewModel.password.value = INVALID_PASSWORD
-        `when`(passwordUpdateUseCase.invoke(anyString(), anyString())).thenReturn(Completable.complete())
+        `when`(
+            passwordUpdateUseCase.invoke(
+                anyString(),
+                anyString()
+            )
+        ).thenReturn(Completable.complete())
 
         viewModel.submit()
 
@@ -220,10 +237,18 @@ class UserPasswordChangeViewModelTest : TestHelper by DefaultTestHelper() {
     private fun setupViewModel() {
         appResources = mock()
         passwordUpdateUseCase = mock()
-        viewModel = UserPasswordChangeViewModel(passwordUpdateUseCase, appResources, TestAppSchedulers())
+        viewModel = UserPasswordChangeViewModel(
+            DEFAULT_USER_ID,
+            SavedStateHandle(),
+            passwordUpdateUseCase,
+            appResources,
+            TestAppSchedulers()
+        )
 
         `when`(appResources.getStringResource(R.string.password_validation_message)).thenReturn("Invalid password")
-        `when`(appResources.getStringResource(R.string.password_confirmation_validation_message)).thenReturn("Password confirmation differs")
+        `when`(appResources.getStringResource(R.string.password_confirmation_validation_message)).thenReturn(
+            "Password confirmation differs"
+        )
         `when`(appResources.getStringResource(R.string.common_communication_error)).thenReturn("Common communication error")
     }
 

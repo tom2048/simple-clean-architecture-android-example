@@ -16,6 +16,8 @@
     <string name="user_delete_button">Delete</string>
     <string name="user_set_password_button">Change password</string>
     <string name="user_edit_header">Edit user</string>
+    <string name="user_avatar_description">Avatar</string>
+    <string name="user_idscan_description">ID scan</string>
     <string name="user_edit_save_button">Save</string>
     <string name="user_edit_cancel_button">Cancel</string>
     <string name="user_add_header">Add user</string>

@@ -13,14 +13,16 @@ import androidx.fragment.app.Fragment
 import com.example.simplecleanarchitecture.MainRouter
 import com.example.simplecleanarchitecture.R
 import com.example.simplecleanarchitecture.databinding.UserPasswordChangeFragmentBinding
-import com.example.simplecleanarchitecture.users.ui.useredit.UserEditFragment
 import com.github.terrakok.cicerone.Back
 import org.koin.android.ext.android.inject
-import org.koin.androidx.viewmodel.ext.android.viewModel
+import org.koin.androidx.viewmodel.ext.android.stateViewModel
+import org.koin.core.parameter.parametersOf
 
 class UserPasswordChangeFragment : Fragment() {
 
-    private val viewModel: UserPasswordChangeViewModel by viewModel()
+    private val viewModel: UserPasswordChangeViewModel by stateViewModel(state = { Bundle.EMPTY }) {
+        parametersOf(arguments?.getString(USER_ID_KEY) ?: "")
+    }
 
     private val routing: MainRouter by inject()
 
@@ -51,9 +53,7 @@ class UserPasswordChangeFragment : Fragment() {
         viewModel.routing.observe(viewLifecycleOwner, { routingCommand ->
             routing.execute(routingCommand)
         })
-        arguments?.getString(USER_ID_KEY)?.let {
-            viewModel.setParams(it)
-        } ?: run {
+        if (arguments?.getString(USER_ID_KEY).isNullOrEmpty()) {
             routing.execute(Back())
         }
     }

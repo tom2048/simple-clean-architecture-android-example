@@ -2,6 +2,7 @@ package com.example.simplecleanarchitecture.users.ui.useredit
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.lifecycle.Observer
+import androidx.lifecycle.SavedStateHandle
 import com.example.simplecleanarchitecture.R
 import com.example.simplecleanarchitecture.RouterScreen
 import com.example.simplecleanarchitecture.core.lib.DefaultTestHelper
@@ -12,8 +13,8 @@ import com.example.simplecleanarchitecture.core.lib.extensions.anyNotNull
 import com.example.simplecleanarchitecture.core.lib.resources.AppResources
 import com.example.simplecleanarchitecture.core.lib.schedulers.TestAppSchedulers
 import com.example.simplecleanarchitecture.core.model.User
-import com.example.simplecleanarchitecture.users.usecase.user.UserShowDetailsUseCase
-import com.example.simplecleanarchitecture.users.usecase.user.UserUpdateUseCase
+import com.example.simplecleanarchitecture.users.usecase.user.*
+import com.example.simplecleanarchitecture.users.usecase.user.UserAddAttachmentUseCaseDefault.Type
 import com.github.terrakok.cicerone.Back
 import com.github.terrakok.cicerone.Command
 import com.github.terrakok.cicerone.Forward
@@ -26,6 +27,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mockito.*
+import java.nio.charset.Charset
 
 class UserEditViewModelTest : TestHelper by DefaultTestHelper() {
 
@@ -40,12 +42,16 @@ class UserEditViewModelTest : TestHelper by DefaultTestHelper() {
     private lateinit var emailObserver: Observer<String>
     private lateinit var emailValidationErrorObserver: Observer<String>
     private lateinit var descriptionValidationErrorObserver: Observer<String>
+    private lateinit var avatarObserver: Observer<ByteArray?>
+    private lateinit var idScanObserver: Observer<ByteArray?>
     private lateinit var preloaderObserver: Observer<Boolean>
     private lateinit var errorMessageObserver: Observer<String>
     private lateinit var isSubmitEnabledObserver: Observer<Boolean>
     private lateinit var screenRoutingObserver: Observer<Command>
 
     private lateinit var userShowDetailsUseCase: UserShowDetailsUseCase
+    private lateinit var userAddAttachmentUseCase: UserAddAttachmentUseCase
+    private lateinit var userGetAttachmentUseCase: UserGetAttachmentUseCase
     private lateinit var userUpdateUseCase: UserUpdateUseCase
     private lateinit var appResources: AppResources
 
@@ -83,7 +89,6 @@ class UserEditViewModelTest : TestHelper by DefaultTestHelper() {
     fun `submit() invokes update use case when there are correct user details set`() {
         //fun `Given an correct user details, when submit(), then user object is properly created`() {
         `when`(userUpdateUseCase.invoke(anyNotNull())).thenReturn(Completable.complete())
-        viewModel.setParams(DEFAULT_USER.id)
         viewModel.email.value = DEFAULT_USER.email
         viewModel.nickname.value = DEFAULT_USER.nickname
 
@@ -133,7 +138,6 @@ class UserEditViewModelTest : TestHelper by DefaultTestHelper() {
     fun `loadDetails() loads user data when the data is properly loaded`() {
         //fun `Given non empty user id and correct result, when loadDetails(), then user data is passed to form`() {
         `when`(userShowDetailsUseCase.invoke(anyNotNull())).thenReturn(Single.just(DEFAULT_USER))
-        viewModel.setParams("test")
 
         viewModel.loadDetails()
 
@@ -145,7 +149,6 @@ class UserEditViewModelTest : TestHelper by DefaultTestHelper() {
     fun `loadDetails() shows and then hides the preloader when the data is properly loaded`() {
         //fun `Given non empty user id and correct result, when loadDetails(), then preloader is set to visible and then to gone`() {
         `when`(userShowDetailsUseCase.invoke(anyNotNull())).thenReturn(Single.just(DEFAULT_USER))
-        viewModel.setParams("test")
 
         viewModel.loadDetails()
 
@@ -159,7 +162,6 @@ class UserEditViewModelTest : TestHelper by DefaultTestHelper() {
     fun `loadDetails() shows and then hides the preloader when there is an error while loading data`() {
         //fun `Given non empty user id and error result, when loadDetails(), then preloader is set to visible and then to gone`() {
         `when`(userShowDetailsUseCase.invoke(anyNotNull())).thenReturn(Single.error(TestException()))
-        viewModel.setParams("test")
 
         viewModel.loadDetails()
 
@@ -167,6 +169,28 @@ class UserEditViewModelTest : TestHelper by DefaultTestHelper() {
             verify(preloaderObserver).onChanged(true)
             verify(preloaderObserver).onChanged(false)
         }
+    }
+
+    @Test
+    fun `addAvatar() adds the image to the assets when correct data provided`() {
+        val imageBytes = "data".toByteArray(Charset.defaultCharset())
+        `when`(userAddAttachmentUseCase.invoke(anyNotNull(), anyNotNull(), anyNotNull())).thenReturn(Single.just("KEY"))
+        `when`(userGetAttachmentUseCase.invoke(anyNotNull())).thenReturn(Single.just(imageBytes))
+
+        viewModel.addAvatar("test")
+
+        verify(avatarObserver).onChanged(imageBytes)
+    }
+
+    @Test
+    fun `addIdScan() adds the image to the assets when correct data provided`() {
+        val imageBytes = "data".toByteArray(Charset.defaultCharset())
+        `when`(userAddAttachmentUseCase.invoke(anyNotNull(), anyNotNull(), anyNotNull())).thenReturn(Single.just("KEY"))
+        `when`(userGetAttachmentUseCase.invoke(anyNotNull())).thenReturn(Single.just(imageBytes))
+
+        viewModel.addIdScan("test")
+
+        verify(idScanObserver).onChanged(imageBytes)
     }
 
     @Test
@@ -202,10 +226,12 @@ class UserEditViewModelTest : TestHelper by DefaultTestHelper() {
     @Before
     fun setUp() {
         userShowDetailsUseCase = mock()
+        userAddAttachmentUseCase = mock()
+        userGetAttachmentUseCase = mock()
         userUpdateUseCase = mock()
         appResources = mock()
 
-        viewModel = UserEditViewModel(userShowDetailsUseCase, userUpdateUseCase, appResources, TestAppSchedulers())
+        viewModel = UserEditViewModel(DEFAULT_USER.id!!, SavedStateHandle(), userShowDetailsUseCase, userAddAttachmentUseCase, userGetAttachmentUseCase, userUpdateUseCase, appResources, TestAppSchedulers())
 
         `when`(appResources.getStringResource(R.string.nickname_validation_message)).thenReturn("Validation error")
         `when`(appResources.getStringResource(R.string.email_validation_message)).thenReturn("Validation error")
@@ -221,6 +247,11 @@ class UserEditViewModelTest : TestHelper by DefaultTestHelper() {
         viewModel.emailValidationError.observeForever(emailValidationErrorObserver)
         descriptionValidationErrorObserver = mock()
         viewModel.descriptionValidationError.observeForever(descriptionValidationErrorObserver)
+        avatarObserver = mock()
+        viewModel.avatar.observeForever(avatarObserver)
+        idScanObserver = mock()
+        viewModel.idScan.observeForever(idScanObserver)
+
         preloaderObserver = mock()
         viewModel.preloader.observeForever(preloaderObserver)
         errorMessageObserver = mock()

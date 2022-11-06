@@ -12,16 +12,16 @@ import com.github.terrakok.cicerone.Back
 import com.github.terrakok.cicerone.Command
 
 class UserPasswordChangeViewModel(
+    private val userId: String,
+    private val state: SavedStateHandle,
     private val passwordUpdateUseCase: UserPasswordUpdateUseCase,
     private val appResources: AppResources,
     private val appSchedulers: AppSchedulers
 ) : ViewModel() {
 
-    private var userId: String? = null
+    val password = state.getLiveData<String>(STATE_PASSWORD)
 
-    val password = MutableLiveData<String>()
-
-    val passwordConfirmed = MutableLiveData<String>()
+    val passwordConfirmed = state.getLiveData<String>(STATE_PASSWORD_CONFIRMED)
 
     val passwordValidation: LiveData<String> = password.map {
         if (!it.isNullOrEmpty() && !Patterns.PASSWORD.matcher(it).matches()) {
@@ -61,12 +61,8 @@ class UserPasswordChangeViewModel(
     private val _routing = LiveEvent<Command>()
     val routing: LiveData<Command> = _routing
 
-    fun setParams(userId: String) {
-        this.userId = userId
-    }
-
     fun submit() {
-        userId?.let { userId ->
+        userId.takeIf { it.isNotEmpty() }?.let { userId ->
             passwordUpdateUseCase(userId, password.value ?: "")
                 .doOnSubscribe { _preloader.value = true }
                 .observeOn(appSchedulers.mainThread())
@@ -81,5 +77,9 @@ class UserPasswordChangeViewModel(
         }
     }
 
+    companion object {
+        private val STATE_PASSWORD = "STATE_PASSWORD"
+        private val STATE_PASSWORD_CONFIRMED = "STATE_PASSWORD_CONFIRMED"
+    }
 
 }

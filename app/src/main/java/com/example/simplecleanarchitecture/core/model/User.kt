@@ -9,7 +9,8 @@ data class User(
     val nickname: String,
     val email: String,
     val description: String = "",
-    val photo: ByteArray? = null
+    val photo: ByteArray? = null,
+    val idScan: ByteArray? = null
 ) : Parcelable {
 
     override fun equals(other: Any?): Boolean {
@@ -21,6 +22,7 @@ data class User(
             && email == other.email
             && description == other.description
             && photo.contentEquals(other.photo)
+            && idScan.contentEquals(other.idScan)
         ) {
             return true
         }
@@ -33,6 +35,7 @@ data class User(
         result = result * 31 + (email?.hashCode() ?: 0)
         result = result * 31 + (description?.hashCode() ?: 0)
         result = result * 31 + (photo?.contentHashCode() ?: 0)
+        result = result * 31 + (idScan?.contentHashCode() ?: 0)
         return result
     }
 }
