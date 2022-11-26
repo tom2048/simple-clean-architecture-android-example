@@ -4,7 +4,6 @@ import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.lifecycle.Observer
 import androidx.lifecycle.SavedStateHandle
 import com.example.simplecleanarchitecture.R
-import com.example.simplecleanarchitecture.RouterScreen
 import com.example.simplecleanarchitecture.core.lib.DefaultTestHelper
 import com.example.simplecleanarchitecture.core.lib.TestException
 import com.example.simplecleanarchitecture.core.lib.TestHelper
@@ -13,12 +12,12 @@ import com.example.simplecleanarchitecture.core.lib.extensions.anyNotNull
 import com.example.simplecleanarchitecture.core.lib.resources.AppResources
 import com.example.simplecleanarchitecture.core.lib.schedulers.TestAppSchedulers
 import com.example.simplecleanarchitecture.core.model.User
-import com.example.simplecleanarchitecture.users.usecase.user.*
-import com.example.simplecleanarchitecture.users.usecase.user.UserAddAttachmentUseCaseDefault.Type
+import com.example.simplecleanarchitecture.users.usecase.user.UserAddAttachmentUseCase
+import com.example.simplecleanarchitecture.users.usecase.user.UserGetAttachmentUseCase
+import com.example.simplecleanarchitecture.users.usecase.user.UserShowDetailsUseCase
+import com.example.simplecleanarchitecture.users.usecase.user.UserUpdateUseCase
 import com.github.terrakok.cicerone.Back
 import com.github.terrakok.cicerone.Command
-import com.github.terrakok.cicerone.Forward
-import com.nhaarman.mockitokotlin2.clearInvocations
 import com.nhaarman.mockitokotlin2.mock
 import io.reactivex.rxjava3.core.Completable
 import io.reactivex.rxjava3.core.Single
@@ -68,7 +67,11 @@ class UserEditViewModelTest : TestHelper by DefaultTestHelper() {
     @Test
     fun `submit() doesn't close the form when there is an error during save`() {
         //fun `Given an error result, when submit(), then the form is not closed`() {
-        `when`(userUpdateUseCase.invoke(anyNotNull())).thenReturn(Completable.error(ValidationException(listOf(Pair("test", "test")))))
+        `when`(userUpdateUseCase.invoke(anyNotNull())).thenReturn(
+            Completable.error(
+                ValidationException(listOf(Pair("test", "test")))
+            )
+        )
 
         viewModel.submit()
 
@@ -78,7 +81,11 @@ class UserEditViewModelTest : TestHelper by DefaultTestHelper() {
     @Test
     fun `submit() displays an error message when there is an error during save`() {
         //fun `Given an error result, when submit(), then the error message is displayed`() {
-        `when`(userUpdateUseCase.invoke(anyNotNull())).thenReturn(Completable.error(ValidationException(listOf(Pair("test", "test")))))
+        `when`(userUpdateUseCase.invoke(anyNotNull())).thenReturn(
+            Completable.error(
+                ValidationException(listOf(Pair("test", "test")))
+            )
+        )
 
         viewModel.submit()
 
@@ -118,7 +125,10 @@ class UserEditViewModelTest : TestHelper by DefaultTestHelper() {
         //fun `Given an invalid description, when description is set, then description validation message is displayed`() {
         viewModel.description.value = INVALID_DESCRIPTION
 
-        verify(descriptionValidationErrorObserver, only()).onChanged(argThat { !it.isNullOrEmpty() })
+        verify(
+            descriptionValidationErrorObserver,
+            only()
+        ).onChanged(argThat { !it.isNullOrEmpty() })
     }
 
     @Test
@@ -174,7 +184,13 @@ class UserEditViewModelTest : TestHelper by DefaultTestHelper() {
     @Test
     fun `addAvatar() adds the image to the assets when correct data provided`() {
         val imageBytes = "data".toByteArray(Charset.defaultCharset())
-        `when`(userAddAttachmentUseCase.invoke(anyNotNull(), anyNotNull(), anyNotNull())).thenReturn(Single.just("KEY"))
+        `when`(
+            userAddAttachmentUseCase.invoke(
+                anyNotNull(),
+                anyNotNull(),
+                anyNotNull()
+            )
+        ).thenReturn(Single.just("KEY"))
         `when`(userGetAttachmentUseCase.invoke(anyNotNull())).thenReturn(Single.just(imageBytes))
 
         viewModel.addAvatar("test")
@@ -185,7 +201,13 @@ class UserEditViewModelTest : TestHelper by DefaultTestHelper() {
     @Test
     fun `addIdScan() adds the image to the assets when correct data provided`() {
         val imageBytes = "data".toByteArray(Charset.defaultCharset())
-        `when`(userAddAttachmentUseCase.invoke(anyNotNull(), anyNotNull(), anyNotNull())).thenReturn(Single.just("KEY"))
+        `when`(
+            userAddAttachmentUseCase.invoke(
+                anyNotNull(),
+                anyNotNull(),
+                anyNotNull()
+            )
+        ).thenReturn(Single.just("KEY"))
         `when`(userGetAttachmentUseCase.invoke(anyNotNull())).thenReturn(Single.just(imageBytes))
 
         viewModel.addIdScan("test")
@@ -225,72 +247,53 @@ class UserEditViewModelTest : TestHelper by DefaultTestHelper() {
 
     @Before
     fun setUp() {
+        prepareLifecycle()
+
         userShowDetailsUseCase = mock()
         userAddAttachmentUseCase = mock()
         userGetAttachmentUseCase = mock()
         userUpdateUseCase = mock()
         appResources = mock()
 
-        viewModel = UserEditViewModel(DEFAULT_USER.id!!, SavedStateHandle(), userShowDetailsUseCase, userAddAttachmentUseCase, userGetAttachmentUseCase, userUpdateUseCase, appResources, TestAppSchedulers())
+        viewModel = UserEditViewModel(
+            DEFAULT_USER.id!!,
+            SavedStateHandle(),
+            userShowDetailsUseCase,
+            userAddAttachmentUseCase,
+            userGetAttachmentUseCase,
+            userUpdateUseCase,
+            appResources,
+            TestAppSchedulers()
+        )
 
         `when`(appResources.getStringResource(R.string.nickname_validation_message)).thenReturn("Validation error")
         `when`(appResources.getStringResource(R.string.email_validation_message)).thenReturn("Validation error")
         `when`(appResources.getStringResource(R.string.description_validation_message)).thenReturn("Validation error")
 
-        nicknameObserver = mock()
-        viewModel.nickname.observeForever(nicknameObserver)
-        nicknameValidationErrorObserver = mock()
-        viewModel.nicknameValidationError.observeForever(nicknameValidationErrorObserver)
-        emailObserver = mock()
-        viewModel.email.observeForever(emailObserver)
-        emailValidationErrorObserver = mock()
-        viewModel.emailValidationError.observeForever(emailValidationErrorObserver)
-        descriptionValidationErrorObserver = mock()
-        viewModel.descriptionValidationError.observeForever(descriptionValidationErrorObserver)
-        avatarObserver = mock()
-        viewModel.avatar.observeForever(avatarObserver)
-        idScanObserver = mock()
-        viewModel.idScan.observeForever(idScanObserver)
+        nicknameObserver = viewModel.nickname.mockObserver(true)
+        nicknameValidationErrorObserver = viewModel.nicknameValidationError.mockObserver(true)
+        emailObserver = viewModel.email.mockObserver(true)
+        emailValidationErrorObserver = viewModel.emailValidationError.mockObserver(true)
+        descriptionValidationErrorObserver = viewModel.descriptionValidationError.mockObserver(true)
+        avatarObserver = viewModel.avatar.mockObserver(true)
+        idScanObserver = viewModel.idScan.mockObserver(true)
 
-        preloaderObserver = mock()
-        viewModel.preloader.observeForever(preloaderObserver)
-        errorMessageObserver = mock()
-        viewModel.errorMessage.observeForever(errorMessageObserver)
-        isSubmitEnabledObserver = mock()
-        viewModel.isSubmitEnabled.observeForever(isSubmitEnabledObserver)
-        screenRoutingObserver = mock()
-        viewModel.screenRouting.observeForever(screenRoutingObserver)
-
-        clearInvocations(
-            nicknameObserver,
-            nicknameValidationErrorObserver,
-            emailObserver,
-            emailValidationErrorObserver,
-            descriptionValidationErrorObserver,
-            preloaderObserver,
-            errorMessageObserver,
-            isSubmitEnabledObserver,
-            screenRoutingObserver
-        )
+        preloaderObserver = viewModel.preloader.mockObserver(true)
+        errorMessageObserver = viewModel.errorMessage.mockObserver(true)
+        isSubmitEnabledObserver = viewModel.isSubmitEnabled.mockObserver(true)
+        screenRoutingObserver = viewModel.screenRouting.mockObserver(true)
     }
 
     @After
     fun tearDown() {
-        viewModel.nickname.removeObserver(nicknameObserver)
-        viewModel.nicknameValidationError.removeObserver(nicknameValidationErrorObserver)
-        viewModel.email.removeObserver(emailObserver)
-        viewModel.emailValidationError.removeObserver(emailValidationErrorObserver)
-        viewModel.descriptionValidationError.removeObserver(descriptionValidationErrorObserver)
-        viewModel.preloader.removeObserver(preloaderObserver)
-        viewModel.errorMessage.removeObserver(errorMessageObserver)
-        viewModel.isSubmitEnabled.removeObserver(isSubmitEnabledObserver)
-        viewModel.screenRouting.removeObserver(screenRoutingObserver)
+        cleanUpLifecycle()
 
         invokeViewModelOnCleared(viewModel)
     }
 
     companion object {
-        private val DEFAULT_USER = User("a312b3ee-84c2-11eb-8dcd-0242ac130003", "Testnick", "test@test.com", "")
+        private val DEFAULT_USER =
+            User("a312b3ee-84c2-11eb-8dcd-0242ac130003", "Testnick", "test@test.com", "")
         private const val VALID_NICKNAME = "Nick1"
         private const val INVALID_NICKNAME = "TooLongNicknameOfTheUser"
         private const val VALID_EMAIL = "test@test.com"

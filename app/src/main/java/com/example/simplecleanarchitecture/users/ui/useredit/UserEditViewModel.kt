@@ -133,6 +133,8 @@ class UserEditViewModel(
                         _screenRouting.value = Back()
                     })
                 )
+            } ?: run {
+                isInitialized.value = true
             }
         } else {
             Single.zip(

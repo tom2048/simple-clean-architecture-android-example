@@ -44,13 +44,14 @@ class UserPasswordChangeViewModelTest : TestHelper by DefaultTestHelper() {
 
     @Before
     fun setUp() {
+        prepareLifecycle()
         setupViewModel()
         setupObservers()
     }
 
     @After
     fun tearDown() {
-        cleanupObservers()
+        cleanUpLifecycle()
         invokeViewModelOnCleared(viewModel)
     }
 
@@ -253,45 +254,14 @@ class UserPasswordChangeViewModelTest : TestHelper by DefaultTestHelper() {
     }
 
     private fun setupObservers() {
-        passwordObserver = mock()
-        passwordConfirmedObserver = mock()
-        passwordValidationObserver = mock()
-        passwordConfirmedValidationObserver = mock()
-        isSubmitEnabledObserver = mock()
-        preloaderObserver = mock()
-        messageObserver = mock()
-        routingObserver = mock()
-        viewModel.apply {
-            password.observeForever(passwordObserver)
-            passwordConfirmed.observeForever(passwordConfirmedObserver)
-            passwordValidation.observeForever(passwordValidationObserver)
-            passwordConfirmedValidation.observeForever(passwordConfirmedValidationObserver)
-            isSubmitEnabled.observeForever(isSubmitEnabledObserver)
-            preloader.observeForever(preloaderObserver)
-            message.observeForever(messageObserver)
-            routing.observeForever(routingObserver)
-        }
-        clearInvocations(
-            passwordObserver,
-            passwordConfirmedObserver,
-            passwordValidationObserver,
-            passwordConfirmedValidationObserver,
-            isSubmitEnabledObserver,
-            preloaderObserver,
-            messageObserver,
-            routingObserver
-        )
-    }
-
-    private fun cleanupObservers() {
-        viewModel.password.removeObserver(passwordObserver)
-        viewModel.passwordConfirmed.removeObserver(passwordConfirmedObserver)
-        viewModel.passwordValidation.removeObserver(passwordValidationObserver)
-        viewModel.passwordConfirmedValidation.removeObserver(passwordConfirmedValidationObserver)
-        viewModel.isSubmitEnabled.removeObserver(isSubmitEnabledObserver)
-        viewModel.preloader.removeObserver(preloaderObserver)
-        viewModel.message.removeObserver(messageObserver)
-        viewModel.routing.removeObserver(routingObserver)
+        passwordObserver = viewModel.password.mockObserver(true)
+        passwordConfirmedObserver = viewModel.passwordConfirmed.mockObserver(true)
+        passwordValidationObserver = viewModel.passwordValidation.mockObserver(true)
+        passwordConfirmedValidationObserver = viewModel.passwordConfirmedValidation.mockObserver(true)
+        isSubmitEnabledObserver = viewModel.isSubmitEnabled.mockObserver(true)
+        preloaderObserver = viewModel.preloader.mockObserver(true)
+        messageObserver = viewModel.message.mockObserver(true)
+        routingObserver = viewModel.routing.mockObserver(true)
     }
 
     companion object {

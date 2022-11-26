@@ -194,6 +194,7 @@ class UserListViewModelTest : TestHelper by DefaultTestHelper() {
 
     @Before
     fun setUp() {
+        prepareLifecycle()
         userShowListUseCase = mock()
         userDeleteUseCase = mock()
         appResources = mock()
@@ -203,33 +204,16 @@ class UserListViewModelTest : TestHelper by DefaultTestHelper() {
         `when`(appResources.getStringResource(R.string.common_communication_error)).thenReturn("Test error message.")
         `when`(appResources.getStringResource(R.string.user_delete_success_message)).thenReturn("User deleted.")
 
-        userListObserver = mock()
-        viewModel.userList.observeForever(userListObserver)
-        messageObserver = mock()
-        viewModel.message.observeForever(messageObserver)
-        userActionConfirmationObserver = mock()
-        viewModel.userActionConfirmation.observeForever(userActionConfirmationObserver)
-        preloaderObserver = mock()
-        viewModel.preloader.observeForever(preloaderObserver)
-        routingObserver = mock()
-        viewModel.routing.observeForever(routingObserver)
-
-        clearInvocations(
-            userListObserver,
-            messageObserver,
-            userActionConfirmationObserver,
-            preloaderObserver,
-            routingObserver
-        )
+        userListObserver = viewModel.userList.mockObserver(true)
+        messageObserver = viewModel.message.mockObserver(true)
+        userActionConfirmationObserver = viewModel.userActionConfirmation.mockObserver(true)
+        preloaderObserver = viewModel.preloader.mockObserver(true)
+        routingObserver = viewModel.routing.mockObserver(true)
     }
 
     @After
     fun tearDown() {
-        viewModel.userList.removeObserver(userListObserver)
-        viewModel.message.removeObserver(messageObserver)
-        viewModel.userActionConfirmation.removeObserver(userActionConfirmationObserver)
-        viewModel.preloader.removeObserver(preloaderObserver)
-        viewModel.routing.removeObserver(routingObserver)
+        cleanUpLifecycle()
         invokeViewModelOnCleared(viewModel)
     }
 
